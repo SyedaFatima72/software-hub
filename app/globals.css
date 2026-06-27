@@ -1,15 +1,11 @@
-@import "tailwindcss";
-
-@theme {
-  --color-primary: #00B140;
-  --color-primary-dark: #009a35;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   body {
     background: #f8fafc;
     color: #111827;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
   * {
@@ -20,7 +16,6 @@
     cursor: pointer;
   }
 
-  /* Custom Scrollbar */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -33,24 +28,9 @@
   ::-webkit-scrollbar-thumb {
     background: #00B140;
     border-radius: 50px;
-    transition: background 0.3s;
   }
 
   ::-webkit-scrollbar-thumb:hover {
     background: #009a35;
-  }
-}
-
-@layer components {
-  .btn-primary {
-    @apply px-6 py-3 bg-[#00B140] text-white rounded-xl font-semibold hover:bg-green-700 transition;
-  }
-
-  .btn-secondary {
-    @apply px-6 py-3 border border-[#00B140] text-[#00B140] rounded-xl font-semibold hover:bg-[#00B140] hover:text-white transition;
-  }
-
-  .card-shadow {
-    @apply shadow-lg hover:shadow-2xl transition-shadow duration-300;
   }
 }
