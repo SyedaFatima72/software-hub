@@ -21,20 +21,18 @@ const AuthCard = ({
   footerLinkText,
 }: AuthCardProps) => {
   return (
-    <div className="relative w-full max-w-md">
-      {/* Glassmorphism Card */}
+    <div className="relative w-full max-w-md z-10">
+      {/* Glassmorphism Card - No blobs */}
       <div className="relative bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-8 md:p-10">
-        {/* Green glow effect */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#00B140]/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-[#00B140]/10 rounded-full blur-3xl" />
-        
         {/* Content */}
         <div className="relative z-10">
           {/* Logo */}
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-[#96faba] rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/30">
-              <span className="text-2xl font-bold text-white"><img src="../images/icon.png" alt="icon" /></span>
-            </div>
+            <Link href="/">
+              <div className="w-16 h-16 bg-[#d1f0d9] rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all hover:scale-105 cursor-pointer">
+                <span className="text-2xl font-bold text-white"><img src="../images/icon.png" alt="icon" /></span>
+              </div>
+            </Link>
           </div>
 
           {/* Header */}
@@ -49,7 +47,7 @@ const AuthCard = ({
           {/* Footer */}
           <p className="text-center text-white/70 mt-6">
             {footerText}{" "}
-            <Link href={footerLink} className="text-[#00B140] font-semibold hover:underline">
+            <Link href={footerLink} className="text-[#00B140] font-semibold hover:underline transition-all">
               {footerLinkText}
             </Link>
           </p>
