@@ -43,18 +43,18 @@ const Navbar = () => {
 
         {/* Right - Auth Buttons */}
         <div className="hidden items-center gap-4 md:flex">
-          <Link
+        <Link
             href="/signup"
             className="rounded-xl border border-[#00B140] px-7 py-3 font-semibold text-[#00B140] transition duration-300 hover:bg-[#00B140] hover:text-white"
-          >
+        >
             Sign Up
-          </Link>
-          <Link
+        </Link>
+        <Link
             href="/login"
             className="rounded-xl bg-[#00B140] px-7 py-3 font-semibold text-white shadow-lg shadow-green-200 transition duration-300 hover:-translate-y-1 hover:bg-green-700"
-          >
+        >
             Login
-          </Link>
+        </Link>
         </div>
 
         {/* Mobile Menu Button */}
