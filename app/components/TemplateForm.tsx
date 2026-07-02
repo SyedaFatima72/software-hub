@@ -32,7 +32,6 @@ export default function TemplateForm({
   const [tags, setTags] = useState<string[]>(initialData?.tags || []);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Character limits
   const TITLE_MAX = 50;
   const DESCRIPTION_MAX = 200;
 
@@ -76,7 +75,12 @@ export default function TemplateForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ image, title, description, tags });
+    onSave({
+      image: image || "",
+      title: title || "Untitled",
+      description: description || "No description",
+      tags: tags.length > 0 ? tags : ["untagged"],
+    });
   };
 
   return (
@@ -154,7 +158,7 @@ export default function TemplateForm({
             </div>
           </div>
 
-          {/* Title with Character Limit */}
+          {/* Title */}
           <div>
             <div className="flex justify-between items-center mb-2">
               <label className="block text-sm font-medium text-gray-700">
@@ -179,12 +183,9 @@ export default function TemplateForm({
               placeholder="Enter template title (max 50 chars)"
               required
             />
-            {title.length > TITLE_MAX && (
-              <p className="text-red-500 text-xs mt-1">Character limit exceeded!</p>
-            )}
           </div>
 
-          {/* Description with Character Limit */}
+          {/* Description */}
           <div>
             <div className="flex justify-between items-center mb-2">
               <label className="block text-sm font-medium text-gray-700">
@@ -209,9 +210,6 @@ export default function TemplateForm({
               rows={3}
               required
             />
-            {description.length > DESCRIPTION_MAX && (
-              <p className="text-red-500 text-xs mt-1">Character limit exceeded!</p>
-            )}
           </div>
 
           {/* Tags */}

@@ -1,65 +1,56 @@
 "use client";
 
 import Image from "next/image";
-import { Template } from "../types/template";
-import { useState } from "react";
+import type { Template } from "../types/template";
 
 interface Props {
   template: Template;
 }
 
 const TemplateCard = ({ template }: Props) => {
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
-    <div
-      className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="overflow-hidden relative">
-        <Image
-          src={template.image}
-          alt={template.title}
-          width={600}
-          height={350}
-          className={`w-full h-56 object-cover transition-transform duration-500 ${
-            isHovered ? "scale-110" : "scale-100"
-          }`}
-        />
-        <div className="absolute top-4 right-4 bg-[#00B140] text-white px-3 py-1 rounded-full text-sm font-semibold">
-          {template.category}
-        </div>
+    <div className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-200 hover:shadow-2xl transition-all duration-300 group flex flex-col">
+      {/* Image */}
+      <div className="relative h-48 overflow-hidden bg-gray-100 flex-shrink-0">
+        {template.image ? (
+          <Image
+            src={template.image}
+            alt={template.title}
+            width={400}
+            height={300}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-gray-400 text-sm">No image</span>
+          </div>
+        )}
       </div>
 
-      <div className="p-6">
-        <h2 className="text-2xl font-bold text-gray-800">{template.title}</h2>
-        <p className="text-[#00B140] font-semibold mt-1">
-          Website No: {template.websiteNo}
+      {/* Content */}
+      <div className="p-5 flex flex-col flex-1">
+        <h3 className="text-lg font-bold text-gray-800 mb-2 leading-tight break-words">
+          {template.title || "Untitled"}
+        </h3>
+        
+        <p className="text-gray-600 text-sm leading-relaxed break-words flex-1">
+          {template.description || "No description"}
         </p>
 
-        <div className="flex flex-wrap gap-2 mt-4">
-          {template.tags.map((tag) => (
-            <span
-              key={tag}
-              className="px-3 py-1 rounded-full bg-green-100 text-[#00B140] text-sm font-medium"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        <p className="text-gray-500 mt-4 leading-7 line-clamp-3">
-          {template.description}
-        </p>
-
-        <div className="flex gap-3 mt-6">
-          <button className="flex-1 bg-gray-700 hover:bg-gray-800 text-white rounded-lg py-3 font-semibold transition hover:shadow-lg">
-            View Demo
-          </button>
-          <button className="flex-1 bg-[#00B140] hover:bg-green-700 text-white rounded-lg py-3 font-semibold transition hover:shadow-lg hover:-translate-y-1">
-            Buy Now
-          </button>
+        {/* Tags */}
+        <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-gray-100">
+          {template.tags?.length > 0 ? (
+            template.tags.map((tag) => (
+              <span
+                key={tag}
+                className="px-2.5 py-1 rounded-full bg-green-100 text-[#00B140] text-xs font-medium"
+              >
+                {tag}
+              </span>
+            ))
+          ) : (
+            <span className="text-xs text-gray-400">No tags</span>
+          )}
         </div>
       </div>
     </div>

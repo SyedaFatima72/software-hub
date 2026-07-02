@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Navbar from "../components/Navbar";
 import { Plus, Edit, Trash2 } from "lucide-react";
@@ -12,60 +13,128 @@ interface Template {
   title: string;
   description: string;
   tags: string[];
+  userId: string;
 }
 
 export default function Dashboard() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const router = useRouter();
 
-  // Load templates from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("myTemplates");
-    if (saved) {
-      setTemplates(JSON.parse(saved));
+    const userData = localStorage.getItem("user");
+    if (!userData) {
+      router.push("/login");
+      return;
     }
-  }, []);
 
-  // Save to localStorage
-  const saveTemplates = (newTemplates: Template[]) => {
-    setTemplates(newTemplates);
-    localStorage.setItem("myTemplates", JSON.stringify(newTemplates));
+    const parsedUser = JSON.parse(userData);
+    setUser(parsedUser);
+    fetchTemplates(parsedUser.id);
+  }, [router]);
+
+  const fetchTemplates = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/templates?userId=${userId}`);
+      const data = await res.json();
+      setTemplates(data);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Add new template
-  const addTemplate = (template: Omit<Template, "id">) => {
-    const newTemplate = {
-      ...template,
-      id: Date.now().toString(),
-    };
-    saveTemplates([...templates, newTemplate]);
-    setIsModalOpen(false);
+  const addTemplate = async (template: Omit<Template, "id" | "userId">) => {
+    try {
+      const res = await fetch("/api/templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...template,
+          userId: user.id,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTemplates([data, ...templates]);
+        setIsModalOpen(false);
+        alert("Template created successfully!");
+      } else {
+        alert(data.error || "Failed to create template");
+      }
+    } catch (error) {
+      console.error("Error adding template:", error);
+      alert("Failed to add template");
+    }
   };
 
-  // Edit template
-  const editTemplate = (updatedTemplate: Template) => {
-    const updated = templates.map((t) =>
-      t.id === updatedTemplate.id ? updatedTemplate : t
-    );
-    saveTemplates(updated);
-    setIsModalOpen(false);
-    setEditingTemplate(null);
+  const editTemplate = async (updatedTemplate: Template) => {
+    try {
+      const res = await fetch(`/api/templates`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...updatedTemplate,
+          userId: user.id,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const updated = templates.map((t) =>
+          t.id === data.id ? data : t
+        );
+        setTemplates(updated);
+        setIsModalOpen(false);
+        setEditingTemplate(null);
+        alert("Template updated successfully!");
+      } else {
+        alert(data.error || "Failed to update template");
+      }
+    } catch (error) {
+      console.error("Error updating template:", error);
+      alert("Failed to update template");
+    }
   };
 
-  // Delete template
-  const deleteTemplate = (id: string) => {
+  const deleteTemplate = async (id: string) => {
     if (confirm("Are you sure you want to delete this template?")) {
-      const filtered = templates.filter((t) => t.id !== id);
-      saveTemplates(filtered);
+      try {
+        const res = await fetch(`/api/templates?id=${id}&userId=${user.id}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          const filtered = templates.filter((t) => t.id !== id);
+          setTemplates(filtered);
+          alert("Template deleted successfully!");
+        } else {
+          alert("Failed to delete template");
+        }
+      } catch (error) {
+        console.error("Error deleting template:", error);
+        alert("Failed to delete template");
+      }
     }
   };
 
-  // Open edit modal
   const openEditModal = (template: Template) => {
     setEditingTemplate(template);
     setIsModalOpen(true);
   };
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-gray-500">Loading...</div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -74,7 +143,12 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-6">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800">My Templates</h1>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800">My Templates</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Welcome, {user?.name}!
+              </p>
+            </div>
             <span className="text-sm text-gray-500">
               {templates.length} templates
             </span>
@@ -82,7 +156,7 @@ export default function Dashboard() {
 
           {/* Templates Grid - 3 columns */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Add New Template Card */}
+            {/* Add New Template Card - Plus Icon */}
             <div
               onClick={() => {
                 setEditingTemplate(null);
@@ -126,19 +200,16 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                {/* Content - Complete text without truncation */}
+                {/* Content */}
                 <div className="p-5 flex flex-col flex-1">
-                  {/* Title - Complete, auto-wraps */}
                   <h3 className="text-lg font-bold text-gray-800 mb-2 leading-tight break-words">
                     {template.title || "Untitled"}
                   </h3>
                   
-                  {/* Description - Complete, auto-wraps */}
                   <p className="text-gray-600 text-sm leading-relaxed break-words flex-1">
                     {template.description || "No description"}
                   </p>
 
-                  {/* Tags - Complete list */}
                   <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-gray-100">
                     {template.tags?.length > 0 ? (
                       template.tags.map((tag) => (
@@ -154,7 +225,7 @@ export default function Dashboard() {
                     )}
                   </div>
 
-                  {/* Action Buttons */}
+                  {/* Action Buttons - Edit & Delete */}
                   <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-100">
                     <button
                       onClick={(e) => {
@@ -202,7 +273,7 @@ export default function Dashboard() {
           }}
           onSave={(template) => {
             if (editingTemplate) {
-              editTemplate({ ...template, id: editingTemplate.id });
+              editTemplate({ ...template, id: editingTemplate.id, userId: user.id });
             } else {
               addTemplate(template);
             }

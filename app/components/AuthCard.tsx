@@ -23,9 +23,7 @@ const AuthCard = ({
 }: AuthCardProps) => {
   return (
     <div className="relative w-full max-w-md z-10">
-      {/* Glassmorphism Card - Light version */}
       <div className="relative bg-white/80 backdrop-blur-xl border border-white/60 rounded-3xl shadow-2xl p-8 md:p-10">
-        {/* Content */}
         <div className="relative z-10">
           {/* Logo */}
           <div className="flex justify-center mb-6">
