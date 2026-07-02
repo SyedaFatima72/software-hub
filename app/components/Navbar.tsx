@@ -33,11 +33,11 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("rememberToken");
     setIsLoggedIn(false);
     setUser(null);
     router.push("/");
   };
-
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#036627]/20 bg-[#f0f5f1] backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">

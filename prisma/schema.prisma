@@ -8,18 +8,21 @@ datasource db {
 }
 
 model User {
-  id        String      @id @default(cuid())
-  name      String
-  email     String      @unique
-  password  String
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  templates Template[]
+  id               String      @id @default(cuid())
+  name             String
+  email            String      @unique
+  password         String
+  resetToken       String?     // For password reset
+  resetTokenExpires DateTime?   // Token expiry
+  rememberToken    String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  templates        Template[]
 }
 
 model Template {
   id          String    @id @default(cuid())
-  image       String    @db.Text   // ← ADD THIS: allows longer text
+  image       String    @db.Text
   title       String
   description String
   tags        String

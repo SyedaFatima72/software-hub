@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("Login request:", { email: body.email });
-
-    const { email, password } = body;
+    const { email, password, rememberMe } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -28,7 +27,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Verify password
+    // Verify password (no verification check)
     const isValid = await bcrypt.compare(password, user.password);
 
     if (!isValid) {
@@ -38,6 +37,21 @@ export async function POST(req: Request) {
       );
     }
 
+    // Generate JWT token if remember me
+    let token = null;
+    if (rememberMe) {
+      token = jwt.sign(
+        { userId: user.id, email: user.email },
+        process.env.JWT_SECRET!,
+        { expiresIn: '7d' }
+      );
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { rememberToken: token },
+      });
+    }
+
     return NextResponse.json({
       success: true,
       user: {
@@ -45,6 +59,7 @@ export async function POST(req: Request) {
         name: user.name,
         email: user.email,
       },
+      token,
     });
   } catch (error) {
     console.error('Login error:', error);

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "../../components/Navbar";
 import AuthCard from "../../components/AuthCard";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Check, X } from "lucide-react";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -16,11 +16,63 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordChecks, setPasswordChecks] = useState({
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    special: false,
+  });
   const router = useRouter();
+
+  // Password strength checker
+  useEffect(() => {
+    const checks = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    };
+    setPasswordChecks(checks);
+
+    const strength = Object.values(checks).filter(Boolean).length;
+    setPasswordStrength(strength);
+  }, [password]);
+
+  // Strict Email Validation
+  const isValidEmail = (email: string) => {
+    if (email.includes(" ")) return false;
+    if (!email.includes("@")) return false;
+    if (email.length < 5) return false;
+    if (!/^[A-Za-z0-9]/.test(email)) return false;
+    const parts = email.split("@");
+    if (parts.length !== 2) return false;
+    const domain = parts[1];
+    if (domain.length < 3) return false;
+    if (!domain.includes(".")) return false;
+    if (domain.startsWith(".") || domain.endsWith(".")) return false;
+    if (email.includes("..")) return false;
+    return true;
+  };
+
+  const doPasswordsMatch = password === confirmPassword && password.length > 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!isValidEmail(email)) {
+      setError("Please enter a valid email address (e.g., name@gmail.com)");
+      return;
+    }
+
+    if (passwordStrength < 4) {
+      setError("Please make your password stronger (meet at least 4 requirements)");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -39,8 +91,7 @@ export default function SignupPage() {
       const data = await res.json();
 
       if (res.ok) {
-        alert("Account created! Please login.");
-        router.push("/login");
+        setSuccess(true);
       } else {
         setError(data.error || "Signup failed");
       }
@@ -51,6 +102,47 @@ export default function SignupPage() {
       setLoading(false);
     }
   };
+
+  const getStrengthColor = () => {
+    if (passwordStrength <= 1) return "bg-red-500";
+    if (passwordStrength === 2) return "bg-orange-500";
+    if (passwordStrength === 3) return "bg-yellow-500";
+    if (passwordStrength === 4) return "bg-blue-500";
+    return "bg-green-500";
+  };
+
+  const getStrengthText = () => {
+    if (passwordStrength <= 1) return "Weak";
+    if (passwordStrength === 2) return "Fair";
+    if (passwordStrength === 3) return "Good";
+    if (passwordStrength === 4) return "Strong";
+    return "Very Strong";
+  };
+
+  if (success) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-4 bg-[#f0f5f1]">
+          <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-4xl">✅</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800">Account Created!</h2>
+            <p className="text-gray-500 mt-2">
+              Your account has been created successfully.
+            </p>
+            <Link
+              href="/login"
+              className="inline-block mt-6 px-6 py-3 bg-[#036627] text-white rounded-xl hover:bg-green-700 transition"
+            >
+              Login Now
+            </Link>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -70,6 +162,7 @@ export default function SignupPage() {
               </div>
             )}
 
+            {/* Name */}
             <div>
               <label className="block text-gray-700 text-sm font-medium mb-2">
                 Full Name
@@ -84,20 +177,44 @@ export default function SignupPage() {
               />
             </div>
 
+            {/* Email */}
             <div>
               <label className="block text-gray-700 text-sm font-medium mb-2">
                 Email Address
               </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white/40 backdrop-blur-md border border-white/50 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#036627] focus:ring-2 focus:ring-[#036627]/20 transition-all"
-                placeholder="you@example.com"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`w-full px-4 py-3 rounded-xl bg-white/40 backdrop-blur-md border ${
+                    email && !isValidEmail(email)
+                      ? "border-red-500"
+                      : email && isValidEmail(email)
+                      ? "border-green-500"
+                      : "border-white/50"
+                  } text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#036627] focus:ring-2 focus:ring-[#036627]/20 transition-all pr-10`}
+                  placeholder="name@example.com"
+                  required
+                />
+                {email && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {isValidEmail(email) ? (
+                      <Check className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <X className="w-5 h-5 text-red-500" />
+                    )}
+                  </div>
+                )}
+              </div>
+              {email && !isValidEmail(email) && (
+                <p className="text-red-500 text-xs mt-1">
+                  Valid format: name@gmail.com (no spaces, must have @ and domain)
+                </p>
+              )}
             </div>
 
+            {/* Password */}
             <div>
               <label className="block text-gray-700 text-sm font-medium mb-2">
                 Password
@@ -115,17 +232,51 @@ export default function SignupPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? (
-                    <Eye className="w-5 h-5" />
-                  ) : (
-                    <EyeOff className="w-5 h-5" />
-                  )}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+
+              {password.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${getStrengthColor()}`}
+                        style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-medium text-gray-600">
+                      {getStrengthText()}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs">
+                    <div className={`flex items-center gap-1.5 ${passwordChecks.length ? 'text-green-600' : 'text-gray-400'}`}>
+                      {passwordChecks.length ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                      <span>At least 8 characters</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 ${passwordChecks.uppercase ? 'text-green-600' : 'text-gray-400'}`}>
+                      {passwordChecks.uppercase ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                      <span>Uppercase letter (A-Z)</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 ${passwordChecks.lowercase ? 'text-green-600' : 'text-gray-400'}`}>
+                      {passwordChecks.lowercase ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                      <span>Lowercase letter (a-z)</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 ${passwordChecks.number ? 'text-green-600' : 'text-gray-400'}`}>
+                      {passwordChecks.number ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                      <span>Number (0-9)</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 ${passwordChecks.special ? 'text-green-600' : 'text-gray-400'}`}>
+                      {passwordChecks.special ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                      <span>Special character (!@#$%^&*)</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
+            {/* Confirm Password */}
             <div>
               <label className="block text-gray-700 text-sm font-medium mb-2">
                 Confirm Password
@@ -135,7 +286,13 @@ export default function SignupPage() {
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/40 backdrop-blur-md border border-white/50 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#036627] focus:ring-2 focus:ring-[#036627]/20 transition-all pr-12"
+                  className={`w-full px-4 py-3 rounded-xl bg-white/40 backdrop-blur-md border ${
+                    confirmPassword && password && !doPasswordsMatch
+                      ? "border-red-500"
+                      : confirmPassword && doPasswordsMatch
+                      ? "border-green-500"
+                      : "border-white/50"
+                  } text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#036627] focus:ring-2 focus:ring-[#036627]/20 transition-all pr-12`}
                   placeholder="Confirm your password"
                   required
                 />
@@ -143,15 +300,34 @@ export default function SignupPage() {
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >
-                  {showConfirmPassword ? (
-                    <Eye className="w-5 h-5" />
-                  ) : (
-                    <EyeOff className="w-5 h-5" />
-                  )}
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
+                {confirmPassword && password && (
+                  <div className="absolute right-12 top-1/2 -translate-y-1/2">
+                    {doPasswordsMatch ? (
+                      <Check className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <X className="w-5 h-5 text-red-500" />
+                    )}
+                  </div>
+                )}
               </div>
+              {confirmPassword && password && !doPasswordsMatch && (
+                <p className="text-red-500 text-xs mt-1">Passwords do not match</p>
+              )}
+              {confirmPassword && password && doPasswordsMatch && (
+                <p className="text-green-500 text-xs mt-1">Passwords match ✓</p>
+              )}
+            </div>
+
+            {/* ✅ DISCLAIMER - Added here */}
+            <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+              <p className="text-xs text-yellow-800">
+                ⚠️ <span className="font-semibold">Important:</span> Please use a valid email address. 
+                If you forget your password, we will send a new password to this email. 
+                Without a valid email, you won&apos;t be able to recover your account.
+              </p>
             </div>
 
             <button
